@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance - Indian Payroll System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Indian Payroll System</div>
+        <ul class="nav-menu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="employees.html">Employees</a></li>
+            <li><a href="attendance.html" class="active">Attendance</a></li>
+            <li><a href="salary.html">Salary/Payroll</a></li>
+            <li><a href="leaves.html">Leave Management</a></li>
+            <li><a href="loans.html">Loans & Advances</a></li>
+            <li><a href="reimbursements.html">Reimbursements</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+        <div class="user-info">
+            <span id="userDisplay"></span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Attendance Management</h1>
+        
+        <div class="action-bar">
+            <input type="date" id="attendanceDate" value="">
+            <button onclick="markAllPresent()" class="btn-primary">Mark All Present</button>
+            <button onclick="saveAttendance()" class="btn-primary">Save Attendance</button>
+        </div>
+
+        <!-- Attendance Marking -->
+        <div class="table-section">
+            <h2>Mark Attendance</h2>
+            <table id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>Emp Code</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>In Time</th>
+                        <th>Out Time</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceList">
+                    <!-- Attendance rows will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Attendance History -->
+        <div class="table-section">
+            <h2>Attendance History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Employee</th>
+                        <th>Status</th>
+                        <th>In Time</th>
+                        <th>Out Time</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceHistory">
+                    <!-- History will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        // Check if user is logged in
+        checkAuth();
+
+        let employees = JSON.parse(localStorage.getItem('employees') || '[]');
+        let attendance = JSON.parse(localStorage.getItem('attendance') || '[]');
+        let tempAttendance = {};
+
+        // Set today's date
+        document.getElementById('attendanceDate').value = new Date().toISOString().split('T')[0];
+
+        function loadAttendanceForm() {
+            const tbody = document.getElementById('attendanceList');
+            tbody.innerHTML = '';
+            
+            employees.forEach(emp => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${emp.empCode}</td>
+                    <td>${emp.name}</td>
+                    <td>${emp.department}</td>
+                    <td>
+                        <select id="status_${emp.id}" onchange="updateAttendanceStatus(${emp.id})">
+                            <option value="Present">Present</option>
+                            <option value="Absent">Absent</option>
+                            <option value="Leave">Leave</option>
+                            <option value="Holiday">Holiday</option>
+                            <option value="Weekend">Weekend</option>
+                        </select>
+                    </td>
+                    <td><input type="time" id="inTime_${emp.id}" value="09:00"></td>
+                    <td><input type="time" id="outTime_${emp.id}" value="18:00"></td>
+                `;
+                
+                // Initialize temp attendance
+                tempAttendance[emp.id] = {
+                    empId: emp.id,
+                    empName: emp.name,
+                    status: 'Present',
+                    inTime: '09:00',
+                    outTime: '18:00'
+                };
+            });
+        }
+
+        function updateAttendanceStatus(empId) {
+            const status = document.getElementById(`status_${empId}`).value;
+            tempAttendance[empId].status = status;
+            
+            // Disable time inputs if not present
+            const inTimeInput = document.getElementById(`inTime_${empId}`);
+            const outTimeInput = document.getElementById(`outTime_${empId}`);
+            
+            if (status !== 'Present') {
+                inTimeInput.disabled = true;
+                outTimeInput.disabled = true;
+                inTimeInput.value = '00:00';
+                outTimeInput.value = '00:00';
+            } else {
+                inTimeInput.disabled = false;
+                outTimeInput.disabled = false;
+                inTimeInput.value = '09:00';
+                outTimeInput.value = '18:00';
+            }
+        }
+
+        function markAllPresent() {
+            employees.forEach(emp => {
+                document.getElementById(`status_${emp.id}`).value = 'Present';
+                document.getElementById(`inTime_${emp.id}`).value = '09:00';
+                document.getElementById(`outTime_${emp.id}`).value = '18:00';
+                document.getElementById(`inTime_${emp.id}`).disabled = false;
+                document.getElementById(`outTime_${emp.id}`).disabled = false;
+                
+                tempAttendance[emp.id].status = 'Present';
+                tempAttendance[emp.id].inTime = '09:00';
+                tempAttendance[emp.id].outTime = '18:00';
+            });
+        }
+
+        function saveAttendance() {
+            const date = document.getElementById('attendanceDate').value;
+            
+            // Remove existing attendance for this date
+            attendance = attendance.filter(a => a.date !== date);
+            
+            // Add new attendance records
+            Object.values(tempAttendance).forEach(record => {
+                attendance.push({
+                    id: Date.now() + Math.random(),
+                    date: date,
+                    empId: record.empId,
+                    empName: record.empName,
+                    status: document.getElementById(`status_${record.empId}`).value,
+                    inTime: document.getElementById(`inTime_${record.empId}`).value,
+                    outTime: document.getElementById(`outTime_${record.empId}`).value
+                });
+            });
+            
+            localStorage.setItem('attendance', JSON.stringify(attendance));
+            alert('Attendance saved successfully!');
+            loadAttendanceHistory();
+        }
+
+        function loadAttendanceHistory() {
+            const tbody = document.getElementById('attendanceHistory');
+            tbody.innerHTML = '';
+            
+            // Sort by date descending
+            const sortedAttendance = attendance.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Show last 20 records
+            sortedAttendance.slice(0, 20).forEach(record => {
+                const emp = employees.find(e => e.id === record.empId);
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${record.date}</td>
+                    <td>${emp ? emp.name : record.empName || 'Unknown'}</td>
+                    <td><span class="status-badge status-${record.status.toLowerCase()}">${record.status}</span></td>
+                    <td>${record.inTime}</td>
+                    <td>${record.outTime}</td>
+                `;
+            });
+        }
+
+        // Load data on page load
+        loadAttendanceForm();
+        loadAttendanceHistory();
+    </script>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan & Advance Management - Indian Payroll System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Indian Payroll System</div>
+        <ul class="nav-menu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="employees.html">Employees</a></li>
+            <li><a href="attendance.html">Attendance</a></li>
+            <li><a href="salary.html">Salary/Payroll</a></li>
+            <li><a href="leaves.html">Leave Management</a></li>
+            <li><a href="loans.html" class="active">Loans & Advances</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+        <div class="user-info">
+            <span id="userDisplay"></span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Loan & Advance Management</h1>
+        
+        <div class="action-bar">
+            <button onclick="showLoanForm()" class="btn-primary">New Loan Application</button>
+            <button onclick="showAdvanceForm()" class="btn-primary">New Advance Request</button>
+        </div>
+
+        <!-- Loan Application Form -->
+        <div id="loanForm" class="form-section" style="display: none;">
+            <h2>Loan Application</h2>
+            <form id="loanApplicationForm">
+                <input type="hidden" id="loanId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="loanEmployee">Employee *</label>
+                        <select id="loanEmployee" required>
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="loanType">Loan Type *</label>
+                        <select id="loanType" required>
+                            <option value="Personal">Personal Loan</option>
+                            <option value="Vehicle">Vehicle Loan</option>
+                            <option value="House">House Loan</option>
+                            <option value="Emergency">Emergency Loan</option>
+                            <option value="Education">Education Loan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="loanAmount">Loan Amount (₹) *</label>
+                        <input type="number" id="loanAmount" required min="1000" max="500000">
+                    </div>
+                    <div class="form-group">
+                        <label for="interestRate">Interest Rate (% per annum) *</label>
+                        <input type="number" id="interestRate" step="0.01" value="8.5" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="tenure">Tenure (Months) *</label>
+                        <input type="number" id="tenure" min="6" max="60" value="12" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="emiAmount">EMI Amount (₹)</label>
+                        <input type="number" id="emiAmount" readonly>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="loanPurpose">Purpose *</label>
+                    <textarea id="loanPurpose" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="guarantor1">Guarantor 1 (Employee)</label>
+                        <select id="guarantor1">
+                            <option value="">Select Guarantor</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="guarantor2">Guarantor 2 (Employee)</label>
+                        <select id="guarantor2">
+                            <option value="">Select Guarantor</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="btn-primary">Submit Application</button>
+                    <button type="button" onclick="hideLoanForm()" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Advance Request Form -->
+        <div id="advanceForm" class="form-section" style="display: none;">
+            <h2>Advance Request</h2>
+            <form id="advanceRequestForm">
+                <input type="hidden" id="advanceId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="advanceEmployee">Employee *</label>
+                        <select id="advanceEmployee" required>
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="advanceType">Advance Type *</label>
+                        <select id="advanceType" required onchange="updateAdvanceLimit()">
+                            <option value="Salary">Salary Advance</option>
+                            <option value="Travel">Travel Advance</option>
+                            <option value="Medical">Medical Advance</option>
+                            <option value="Festival">Festival Advance</option>
+                            <option value="Emergency">Emergency Advance</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="advanceAmount">Advance Amount (₹) *</label>
+                        <input type="number" id="advanceAmount" required min="500" max="50000">
+                        <small id="advanceLimit" class="help-text"></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="recoveryPeriod">Recovery Period (Months)</label>
+                        <select id="recoveryPeriod">
+                            <option value="1">1 Month</option>
+                            <option value="2">2 Months</option>
+                            <option value="3" selected>3 Months</option>
+                            <option value="6">6 Months</option>
+                            <option value="12">12 Months</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="advancePurpose">Purpose *</label>
+                    <textarea id="advancePurpose" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="requiredDate">Required Date</label>
+                        <input type="date" id="requiredDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="recoveryAmount">Recovery Amount (Per Month)</label>
+                        <input type="number" id="recoveryAmount" readonly>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="btn-primary">Submit Request</button>
+                    <button type="button" onclick="hideAdvanceForm()" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Active Loans -->
+        <div class="table-section">
+            <h2>Active Loans</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Loan Type</th>
+                        <th>Amount</th>
+                        <th>Interest Rate</th>
+                        <th>EMI</th>
+                        <th>Remaining EMIs</th>
+                        <th>Outstanding</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="loansList">
+                    <!-- Loans will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Advance Requests -->
+        <div class="table-section">
+            <h2>Advance Requests</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Advance Type</th>
+                        <th>Amount</th>
+                        <th>Request Date</th>
+                        <th>Recovery Period</th>
+                        <th>Balance</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="advancesList">
+                    <!-- Advances will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Loan Details Modal -->
+        <div id="loanModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeLoanModal()">&times;</span>
+                <h2>Loan Details</h2>
+                <div id="loanDetails"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        checkAuth();
+
+        let employees = JSON.parse(localStorage.getItem('employees') || '[]');
+        let loans = JSON.parse(localStorage.getItem('loans') || '[]');
+        let advances = JSON.parse(localStorage.getItem('advances') || '[]');
+
+        function loadEmployeeSelects() {
+            const selects = ['loanEmployee', 'advanceEmployee', 'guarantor1', 'guarantor2'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">Select Employee</option>';
+                employees.forEach(emp => {
+                    select.innerHTML += `<option value="${emp.id}">${emp.name} (${emp.empCode})</option>`;
+                });
+            });
+        }
+
+        function showLoanForm() {
+            document.getElementById('loanForm').style.display = 'block';
+            document.getElementById('loanApplicationForm').reset();
+            loadEmployeeSelects();
+        }
+
+        function hideLoanForm() {
+            document.getElementById('loanForm').style.display = 'none';
+        }
+
+        function showAdvanceForm() {
+            document.getElementById('advanceForm').style.display = 'block';
+            document.getElementById('advanceRequestForm').reset();
+            loadEmployeeSelects();
+        }
+
+        function hideAdvanceForm() {
+            document.getElementById('advanceForm').style.display = 'none';
+        }
+
+        function calculateEMI() {
+            const amount = parseFloat(document.getElementById('loanAmount').value);
+            const rate = parseFloat(document.getElementById('interestRate').value) / 12 / 100;
+            const tenure = parseInt(document.getElementById('tenure').value);
+
+            if (amount && rate && tenure) {
+                const emi = amount * rate * Math.pow(1 + rate, tenure) / (Math.pow(1 + rate, tenure) - 1);
+                document.getElementById('emiAmount').value = Math.round(emi);
+            }
+        }
+
+        function updateAdvanceLimit() {
+            const empId = document.getElementById('advanceEmployee').value;
+            const advanceType = document.getElementById('advanceType').value;
+            const employee = employees.find(e => e.id == empId);
+            
+            if (employee && advanceType) {
+                let maxAmount = 0;
+                switch (advanceType) {
+                    case 'Salary':
+                        maxAmount = Math.round(employee.salary * 0.8);
+                        break;
+                    case 'Festival':
+                        maxAmount = Math.round(employee.salary * 0.5);
+                        break;
+                    case 'Emergency':
+                        maxAmount = Math.round(employee.salary * 1.0);
+                        break;
+                    default:
+                        maxAmount = 50000;
+                }
+                document.getElementById('advanceLimit').textContent = `Maximum allowed: ₹${maxAmount.toLocaleString('en-IN')}`;
+                document.getElementById('advanceAmount').max = maxAmount;
+            }
+        }
+
+        function calculateRecovery() {
+            const amount = parseFloat(document.getElementById('advanceAmount').value);
+            const period = parseInt(document.getElementById('recoveryPeriod').value);
+            
+            if (amount && period) {
+                const recoveryAmount = Math.round(amount / period);
+                document.getElementById('recoveryAmount').value = recoveryAmount;
+            }
+        }
+
+        function loadLoans() {
+            const tbody = document.getElementById('loansList');
+            tbody.innerHTML = '';
+            
+            loans.forEach(loan => {
+                const emp = employees.find(e => e.id == loan.empId);
+                if (emp) {
+                    const outstanding = loan.amount - (loan.emisPaid * loan.emiAmount);
+                    const remainingEmis = loan.totalEmis - loan.emisPaid;
+                    
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${emp.name}</td>
+                        <td>${loan.loanType}</td>
+                        <td>₹${loan.amount.toLocaleString('en-IN')}</td>
+                        <td>${loan.interestRate}%</td>
+                        <td>₹${loan.emiAmount.toLocaleString('en-IN')}</td>
+                        <td>${remainingEmis}</td>
+                        <td>₹${Math.max(0, outstanding).toLocaleString('en-IN')}</td>
+                        <td><span class="status-badge status-${loan.status.toLowerCase()}">${loan.status}</span></td>
+                        <td>
+                            <button onclick="viewLoan(${loan.id})" class="btn-small">View</button>
+                            <button onclick="payEmi(${loan.id})" class="btn-small btn-success">Pay EMI</button>
+                        </td>
+                    `;
+                }
+            });
+        }
+
+        function loadAdvances() {
+            const tbody = document.getElementById('advancesList');
+            tbody.innerHTML = '';
+            
+            advances.forEach(advance => {
+                const emp = employees.find(e => e.id == advance.empId);
+                if (emp) {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${emp.name}</td>
+                        <td>${advance.advanceType}</td>
+                        <td>₹${advance.amount.toLocaleString('en-IN')}</td>
+                        <td>${advance.requestDate}</td>
+                        <td>${advance.recoveryPeriod} months</td>
+                        <td>₹${advance.balanceAmount.toLocaleString('en-IN')}</td>
+                        <td><span class="status-badge status-${advance.status.toLowerCase()}">${advance.status}</span></td>
+                        <td>
+                            <button onclick="approveAdvance(${advance.id})" class="btn-small btn-success">Approve</button>
+                            <button onclick="rejectAdvance(${advance.id})" class="btn-small btn-danger">Reject</button>
+                        </td>
+                    `;
+                }
+            });
+        }
+
+        document.getElementById('loanApplicationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const loanData = {
+                id: Date.now(),
+                empId: document.getElementById('loanEmployee').value,
+                loanType: document.getElementById('loanType').value,
+                amount: parseFloat(document.getElementById('loanAmount').value),
+                interestRate: parseFloat(document.getElementById('interestRate').value),
+                tenure: parseInt(document.getElementById('tenure').value),
+                emiAmount: parseInt(document.getElementById('emiAmount').value),
+                purpose: document.getElementById('loanPurpose').value,
+                guarantor1: document.getElementById('guarantor1').value,
+                guarantor2: document.getElementById('guarantor2').value,
+                applicationDate: new Date().toISOString().split('T')[0],
+                status: 'Pending',
+                totalEmis: parseInt(document.getElementById('tenure').value),
+                emisPaid: 0,
+                disbursedAmount: 0
+            };
+            
+            loans.push(loanData);
+            localStorage.setItem('loans', JSON.stringify(loans));
+            hideLoanForm();
+            loadLoans();
+            alert('Loan application submitted successfully!');
+        });
+
+        document.getElementById('advanceRequestForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const advanceData = {
+                id: Date.now(),
+                empId: document.getElementById('advanceEmployee').value,
+                advanceType: document.getElementById('advanceType').value,
+                amount: parseFloat(document.getElementById('advanceAmount').value),
+                recoveryPeriod: parseInt(document.getElementById('recoveryPeriod').value),
+                recoveryAmount: parseInt(document.getElementById('recoveryAmount').value),
+                purpose: document.getElementById('advancePurpose').value,
+                requiredDate: document.getElementById('requiredDate').value,
+                requestDate: new Date().toISOString().split('T')[0],
+                status: 'Pending',
+                balanceAmount: parseFloat(document.getElementById('advanceAmount').value),
+                recoveredAmount: 0
+            };
+            
+            advances.push(advanceData);
+            localStorage.setItem('advances', JSON.stringify(advances));
+            hideAdvanceForm();
+            loadAdvances();
+            alert('Advance request submitted successfully!');
+        });
+
+        // Event listeners for calculations
+        document.getElementById('loanAmount').addEventListener('input', calculateEMI);
+        document.getElementById('interestRate').addEventListener('input', calculateEMI);
+        document.getElementById('tenure').addEventListener('input', calculateEMI);
+        document.getElementById('advanceEmployee').addEventListener('change', updateAdvanceLimit);
+        document.getElementById('advanceAmount').addEventListener('input', calculateRecovery);
+        document.getElementById('recoveryPeriod').addEventListener('change', calculateRecovery);
+
+        function approveAdvance(id) {
+            const advance = advances.find(a => a.id === id);
+            if (advance) {
+                advance.status = 'Approved';
+                advance.approvalDate = new Date().toISOString().split('T')[0];
+                localStorage.setItem('advances', JSON.stringify(advances));
+                loadAdvances();
+                alert('Advance approved successfully!');
+            }
+        }
+
+        function rejectAdvance(id) {
+            const advance = advances.find(a => a.id === id);
+            if (advance) {
+                advance.status = 'Rejected';
+                advance.rejectionDate = new Date().toISOString().split('T')[0];
+                localStorage.setItem('advances', JSON.stringify(advances));
+                loadAdvances();
+                alert('Advance rejected!');
+            }
+        }
+
+        function payEmi(loanId) {
+            const loan = loans.find(l => l.id === loanId);
+            if (loan && loan.emisPaid < loan.totalEmis) {
+                loan.emisPaid += 1;
+                if (loan.emisPaid >= loan.totalEmis) {
+                    loan.status = 'Closed';
+                }
+                localStorage.setItem('loans', JSON.stringify(loans));
+                loadLoans();
+                alert(`EMI payment recorded. ${loan.totalEmis - loan.emisPaid} EMIs remaining.`);
+            }
+        }
+
+        // Initialize data
+        if (loans.length === 0) {
+            // Add sample loan data
+            loans = [
+                {
+                    id: 1,
+                    empId: 1,
+                    loanType: 'Personal',
+                    amount: 100000,
+                    interestRate: 8.5,
+                    tenure: 24,
+                    emiAmount: 4612,
+                    purpose: 'Home renovation',
+                    status: 'Active',
+                    totalEmis: 24,
+                    emisPaid: 5,
+                    disbursedAmount: 100000,
+                    applicationDate: '2023-06-01'
+                }
+            ];
+            localStorage.setItem('loans', JSON.stringify(loans));
+        }
+
+        if (advances.length === 0) {
+            // Add sample advance data
+            advances = [
+                {
+                    id: 1,
+                    empId: 2,
+                    advanceType: 'Festival',
+                    amount: 15000,
+                    recoveryPeriod: 3,
+                    recoveryAmount: 5000,
+                    purpose: 'Diwali festival expenses',
+                    status: 'Approved',
+                    balanceAmount: 10000,
+                    recoveredAmount: 5000,
+                    requestDate: '2024-01-05'
+                }
+            ];
+            localStorage.setItem('advances', JSON.stringify(advances));
+        }
+
+        // Load data on page load
+        loadLoans();
+        loadAdvances();
+    </script>
+</body>
+</html>

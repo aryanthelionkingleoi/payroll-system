@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reimbursements - Indian Payroll System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Indian Payroll System</div>
+        <ul class="nav-menu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="employees.html">Employees</a></li>
+            <li><a href="attendance.html">Attendance</a></li>
+            <li><a href="salary.html">Salary/Payroll</a></li>
+            <li><a href="leaves.html">Leave Management</a></li>
+            <li><a href="loans.html">Loans & Advances</a></li>
+            <li><a href="reimbursements.html" class="active">Reimbursements</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+        <div class="user-info">
+            <span id="userDisplay"></span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Reimbursement Management</h1>
+        
+        <div class="action-bar">
+            <button onclick="showReimbursementForm()" class="btn-primary">Submit New Claim</button>
+            <button onclick="showAllotmentForm()" class="btn-primary">Manage Allotments</button>
+        </div>
+
+        <!-- Reimbursement Claim Form -->
+        <div id="reimbursementForm" class="form-section" style="display: none;">
+            <h2>Reimbursement Claim</h2>
+            <form id="claimForm">
+                <input type="hidden" id="claimId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="claimEmployee">Employee *</label>
+                        <select id="claimEmployee" required onchange="loadEmployeeAllotments()">
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="claimCategory">Category *</label>
+                        <select id="claimCategory" required>
+                            <option value="Medical">Medical</option>
+                            <option value="Travel">Travel</option>
+                            <option value="Conveyance">Conveyance</option>
+                            <option value="Education">Education/Training</option>
+                            <option value="Mobile">Mobile/Communication</option>
+                            <option value="Fuel">Fuel</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Uniform">Uniform</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="claimAmount">Claim Amount (₹) *</label>
+                        <input type="number" id="claimAmount" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="billDate">Bill Date *</label>
+                        <input type="date" id="billDate" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="vendorName">Vendor/Shop Name</label>
+                        <input type="text" id="vendorName">
+                    </div>
+                    <div class="form-group">
+                        <label for="billNumber">Bill Number</label>
+                        <input type="text" id="billNumber">
+                    </div>
+                </div>
+                <div id="employeeAllotment" class="form-group" style="display: none;">
+                    <label>Available Allotment</label>
+                    <div id="allotmentInfo" class="info-box"></div>
+                </div>
+                <div class="form-group">
+                    <label for="claimDescription">Description/Purpose *</label>
+                    <textarea id="claimDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gstAmount">GST Amount (₹)</label>
+                        <input type="number" id="gstAmount" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="claimPriority">Priority</label>
+                        <select id="claimPriority">
+                            <option value="Normal">Normal</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="btn-primary">Submit Claim</button>
+                    <button type="button" onclick="hideReimbursementForm()" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Allotment Management Form -->
+        <div id="allotmentForm" class="form-section" style="display: none;">
+            <h2>Manage Employee Allotments</h2>
+            <form id="allotmentManagementForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="allotEmployee">Employee *</label>
+                        <select id="allotEmployee" required>
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="allotCategory">Category *</label>
+                        <select id="allotCategory" required>
+                            <option value="Medical">Medical</option>
+                            <option value="Travel">Travel</option>
+                            <option value="Mobile">Mobile</option>
+                            <option value="Fuel">Fuel</option>
+                            <option value="Training">Training</option>
+                            <option value="Uniform">Uniform</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="allotAmount">Allotted Amount (₹) *</label>
+                        <input type="number" id="allotAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="allotType">Allotment Type *</label>
+                        <select id="allotType">
+                            <option value="Annual">Annual</option>
+                            <option value="Monthly">Monthly</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="One-time">One-time</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="validFrom">Valid From *</label>
+                        <input type="date" id="validFrom" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="validTo">Valid To *</label>
+                        <input type="date" id="validTo" required>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="btn-primary">Create Allotment</button>
+                    <button type="button" onclick="hideAllotmentForm()" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Pending Claims -->
+        <div class="table-section">
+            <h2>Pending Claims</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Claim ID</th>
+                        <th>Employee</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Bill Date</th>
+                        <th>Submit Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingClaims">
+                    <!-- Pending claims will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Claims History -->
+        <div class="table-section">
+            <h2>Claims History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Claim ID</th>
+                        <th>Employee</th>
+                        <th>Category</th>
+                        <th>Claimed Amount</th>
+                        <th>Approved Amount</th>
+                        <th>Status</th>
+                        <th>Payment Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="claimsHistory">
+                    <!-- Claims history will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Employee Allotments -->
+        <div class="table-section">
+            <h2>Employee Allotments</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Category</th>
+                        <th>Allotted Amount</th>
+                        <th>Utilized Amount</th>
+                        <th>Balance</th>
+                        <th>Type</th>
+                        <th>Valid Until</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="allotmentsList">
+                    <!-- Allotments will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Claim Details Modal -->
+        <div id="claimModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close" onclick="closeClaimModal()">&times;</span>
+                <h2>Claim Details</h2>
+                <div id="claimDetails"></div>
+                <div class="modal-buttons">
+                    <button id="approveBtn" onclick="approveClaim()" class="btn-success">Approve</button>
+                    <button id="rejectBtn" onclick="rejectClaim()" class="btn-danger">Reject</button>
+                    <input type="number" id="approvedAmount" placeholder="Approved Amount" style="margin: 10px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        checkAuth();
+
+        let employees = JSON.parse(localStorage.getItem('employees') || '[]');
+        let claims = JSON.parse(localStorage.getItem('reimbursementClaims') || '[]');
+        let allotments = JSON.parse(localStorage.getItem('allotments') || '[]');
+        let currentClaimId = null;
+
+        function loadEmployeeSelects() {
+            const selects = ['claimEmployee', 'allotEmployee'];
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">Select Employee</option>';
+                employees.forEach(emp => {
+                    select.innerHTML += `<option value="${emp.id}">${emp.name} (${emp.empCode})</option>`;
+                });
+            });
+        }
+
+        function showReimbursementForm() {
+            document.getElementById('reimbursementForm').style.display = 'block';
+            document.getElementById('claimForm').reset();
+            loadEmployeeSelects();
+        }
+
+        function hideReimbursementForm() {
+            document.getElementById('reimbursementForm').style.display = 'none';
+        }
+
+        function showAllotmentForm() {
+            document.getElementById('allotmentForm').style.display = 'block';
+            document.getElementById('allotmentManagementForm').reset();
+            loadEmployeeSelects();
+        }
+
+        function hideAllotmentForm() {
+            document.getElementById('allotmentForm').style.display = 'none';
+        }
+
+        function loadEmployeeAllotments() {
+            const empId = document.getElementById('claimEmployee').value;
+            const category = document.getElementById('claimCategory').value;
+            
+            if (empId && category) {
+                const empAllotments = allotments.filter(a => 
+                    a.empId == empId && 
+                    a.category === category && 
+                    a.status === 'Active' &&
+                    new Date(a.validTo) >= new Date()
+                );
+                
+                if (empAllotments.length > 0) {
+                    const allotment = empAllotments[0];
+                    const balance = allotment.amount - allotment.utilizedAmount;
+                    document.getElementById('employeeAllotment').style.display = 'block';
+                    document.getElementById('allotmentInfo').innerHTML = `
+                        <p><strong>Category:</strong> ${allotment.category}</p>
+                        <p><strong>Allotted:</strong> ₹${allotment.amount.toLocaleString('en-IN')}</p>
+                        <p><strong>Utilized:</strong> ₹${allotment.utilizedAmount.toLocaleString('en-IN')}</p>
+                        <p><strong>Balance:</strong> ₹${balance.toLocaleString('en-IN')}</p>
+                    `;
+                } else {
+                    document.getElementById('employeeAllotment').style.display = 'none';
+                }
+            }
+        }
+
+        function loadPendingClaims() {
+            const tbody = document.getElementById('pendingClaims');
+            tbody.innerHTML = '';
+            
+            const pendingClaims = claims.filter(c => c.status === 'Pending' || c.status === 'Under Review');
+            
+            pendingClaims.forEach(claim => {
+                const emp = employees.find(e => e.id == claim.empId);
+                if (emp) {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>CLM-${String(claim.id).padStart(4, '0')}</td>
+                        <td>${emp.name}</td>
+                        <td>${claim.category}</td>
+                        <td>₹${claim.amount.toLocaleString('en-IN')}</td>
+                        <td>${claim.billDate}</td>
+                        <td>${claim.submitDate}</td>
+                        <td><span class="status-badge status-pending">${claim.status}</span></td>
+                        <td>
+                            <button onclick="viewClaim(${claim.id})" class="btn-small">View</button>
+                            <button onclick="reviewClaim(${claim.id})" class="btn-small btn-primary">Review</button>
+                        </td>
+                    `;
+                }
+            });
+        }
+
+        function loadClaimsHistory() {
+            const tbody = document.getElementById('claimsHistory');
+            tbody.innerHTML = '';
+            
+            const processedClaims = claims.filter(c => c.status === 'Approved' || c.status === 'Rejected' || c.status === 'Paid');
+            
+            processedClaims.forEach(claim => {
+                const emp = employees.find(e => e.id == claim.empId);
+                if (emp) {
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>CLM-${String(claim.id).padStart(4, '0')}</td>
+                        <td>${emp.name}</td>
+                        <td>${claim.category}</td>
+                        <td>₹${claim.amount.toLocaleString('en-IN')}</td>
+                        <td>₹${(claim.approvedAmount || 0).toLocaleString('en-IN')}</td>
+                        <td><span class="status-badge status-${claim.status.toLowerCase()}">${claim.status}</span></td>
+                        <td>${claim.paymentDate || 'N/A'}</td>
+                        <td>
+                            <button onclick="viewClaim(${claim.id})" class="btn-small">View</button>
+                        </td>
+                    `;
+                }
+            });
+        }
+
+        function loadAllotments() {
+            const tbody = document.getElementById('allotmentsList');
+            tbody.innerHTML = '';
+            
+            allotments.forEach(allotment => {
+                const emp = employees.find(e => e.id == allotment.empId);
+                if (emp) {
+                    const balance = allotment.amount - allotment.utilizedAmount;
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td>${emp.name}</td>
+                        <td>${allotment.category}</td>
+                        <td>₹${allotment.amount.toLocaleString('en-IN')}</td>
+                        <td>₹${allotment.utilizedAmount.toLocaleString('en-IN')}</td>
+                        <td>₹${balance.toLocaleString('en-IN')}</td>
+                        <td>${allotment.type}</td>
+                        <td>${allotment.validTo}</td>
+                        <td>
+                            <button onclick="editAllotment(${allotment.id})" class="btn-small">Edit</button>
+                            <button onclick="deleteAllotment(${allotment.id})" class="btn-small btn-danger">Delete</button>
+                        </td>
+                    `;
+                }
+            });
+        }
+
+        document.getElementById('claimForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const claimData = {
+                id: Date.now(),
+                empId: document.getElementById('claimEmployee').value,
+                category: document.getElementById('claimCategory').value,
+                amount: parseFloat(document.getElementById('claimAmount').value),
+                billDate: document.getElementById('billDate').value,
+                vendorName: document.getElementById('vendorName').value,
+                billNumber: document.getElementById('billNumber').value,
+                description: document.getElementById('claimDescription').value,
+                gstAmount: parseFloat(document.getElementById('gstAmount').value) || 0,
+                priority: document.getElementById('claimPriority').value,
+                submitDate: new Date().toISOString().split('T')[0],
+                status: 'Pending',
+                approvedAmount: 0,
+                paymentDate: null
+            };
+            
+            claims.push(claimData);
+            localStorage.setItem('reimbursementClaims', JSON.stringify(claims));
+            hideReimbursementForm();
+            loadPendingClaims();
+            alert('Reimbursement claim submitted successfully!');
+        });
+
+        document.getElementById('allotmentManagementForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const allotmentData = {
+                id: Date.now(),
+                empId: document.getElementById('allotEmployee').value,
+                category: document.getElementById('allotCategory').value,
+                amount: parseFloat(document.getElementById('allotAmount').value),
+                type: document.getElementById('allotType').value,
+                validFrom: document.getElementById('validFrom').value,
+                validTo: document.getElementById('validTo').value,
+                utilizedAmount: 0,
+                status: 'Active',
+                createdDate: new Date().toISOString().split('T')[0]
+            };
+            
+            allotments.push(allotmentData);
+            localStorage.setItem('allotments', JSON.stringify(allotments));
+            hideAllotmentForm();
+            loadAllotments();
+            alert('Allotment created successfully!');
+        });
+
+        function reviewClaim(claimId) {
+            currentClaimId = claimId;
+            const claim = claims.find(c => c.id === claimId);
+            const emp = employees.find(e => e.id == claim.empId);
+            
+            document.getElementById('claimDetails').innerHTML = `
+                <p><strong>Employee:</strong> ${emp.name}</p>
+                <p><strong>Category:</strong> ${claim.category}</p>
+                <p><strong>Amount:</strong> ₹${claim.amount.toLocaleString('en-IN')}</p>
+                <p><strong>Bill Date:</strong> ${claim.billDate}</p>
+                <p><strong>Vendor:</strong> ${claim.vendorName || 'N/A'}</p>
+                <p><strong>Bill Number:</strong> ${claim.billNumber || 'N/A'}</p>
+                <p><strong>Description:</strong> ${claim.description}</p>
+                <p><strong>GST Amount:</strong> ₹${claim.gstAmount.toLocaleString('en-IN')}</p>
+            `;
+            
+            document.getElementById('approvedAmount').value = claim.amount;
+            document.getElementById('claimModal').style.display = 'block';
+        }
+
+        function approveClaim() {
+            if (currentClaimId) {
+                const claim = claims.find(c => c.id === currentClaimId);
+                const approvedAmount = parseFloat(document.getElementById('approvedAmount').value);
+                
+                claim.status = 'Approved';
+                claim.approvedAmount = approvedAmount;
+                claim.approvalDate = new Date().toISOString().split('T')[0];
+                
+                // Update allotment utilization
+                const empAllotment = allotments.find(a => 
+                    a.empId == claim.empId && 
+                    a.category === claim.category && 
+                    a.status === 'Active'
+                );
+                if (empAllotment) {
+                    empAllotment.utilizedAmount += approvedAmount;
+                }
+                
+                localStorage.setItem('reimbursementClaims', JSON.stringify(claims));
+                localStorage.setItem('allotments', JSON.stringify(allotments));
+                
+                closeClaimModal();
+                loadPendingClaims();
+                loadClaimsHistory();
+                loadAllotments();
+                alert('Claim approved successfully!');
+            }
+        }
+
+        function rejectClaim() {
+            if (currentClaimId) {
+                const claim = claims.find(c => c.id === currentClaimId);
+                claim.status = 'Rejected';
+                claim.rejectionDate = new Date().toISOString().split('T')[0];
+                
+                localStorage.setItem('reimbursementClaims', JSON.stringify(claims));
+                closeClaimModal();
+                loadPendingClaims();
+                loadClaimsHistory();
+                alert('Claim rejected!');
+            }
+        }
+
+        function closeClaimModal() {
+            document.getElementById('claimModal').style.display = 'none';
+            currentClaimId = null;
+        }
+
+        // Event listeners
+        document.getElementById('claimEmployee').addEventListener('change', loadEmployeeAllotments);
+        document.getElementById('claimCategory').addEventListener('change', loadEmployeeAllotments);
+
+        // Initialize sample data
+        if (allotments.length === 0) {
+            allotments = [
+                {
+                    id: 1,
+                    empId: 1,
+                    category: 'Medical',
+                    amount: 25000,
+                    type: 'Annual',
+                    validFrom: '2024-01-01',
+                    validTo: '2024-12-31',
+                    utilizedAmount: 5000,
+                    status: 'Active',
+                    createdDate: '2024-01-01'
+                },
+                {
+                    id: 2,
+                    empId: 2,
+                    category: 'Travel',
+                    amount: 15000,
+                    type: 'Annual',
+                    validFrom: '2024-01-01',
+                    validTo: '2024-12-31',
+                    utilizedAmount: 3000,
+                    status: 'Active',
+                    createdDate: '2024-01-01'
+                }
+            ];
+            localStorage.setItem('allotments', JSON.stringify(allotments));
+        }
+
+        if (claims.length === 0) {
+            claims = [
+                {
+                    id: 1,
+                    empId: 1,
+                    category: 'Medical',
+                    amount: 2500,
+                    billDate: '2024-01-10',
+                    vendorName: 'Apollo Pharmacy',
+                    billNumber: 'APO123456',
+                    description: 'Medicine for fever',
+                    gstAmount: 450,
+                    priority: 'Normal',
+                    submitDate: '2024-01-12',
+                    status: 'Pending',
+                    approvedAmount: 0,
+                    paymentDate: null
+                }
+            ];
+            localStorage.setItem('reimbursementClaims', JSON.stringify(claims));
+        }
+
+        // Load data on page load
+        loadPendingClaims();
+        loadClaimsHistory();
+        loadAllotments();
+    </script>
+</body>
+</html>

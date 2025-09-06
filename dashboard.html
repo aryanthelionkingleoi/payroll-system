@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Indian Payroll System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Indian Payroll System</div>
+        <ul class="nav-menu">
+            <li><a href="dashboard.html" class="active">Dashboard</a></li>
+            <li><a href="employees.html">Employees</a></li>
+            <li><a href="attendance.html">Attendance</a></li>
+            <li><a href="salary.html">Salary/Payroll</a></li>
+            <li><a href="leaves.html">Leave Management</a></li>
+            <li><a href="loans.html">Loans & Advances</a></li>
+            <li><a href="reimbursements.html">Reimbursements</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+        <div class="user-info">
+            <span id="userDisplay"></span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Dashboard</h1>
+        
+        <div class="dashboard-grid">
+            <div class="dashboard-card">
+                <h3>Total Employees</h3>
+                <p class="stat-number" id="totalEmployees">0</p>
+            </div>
+            
+            <div class="dashboard-card">
+                <h3>Present Today</h3>
+                <p class="stat-number" id="presentToday">0</p>
+            </div>
+            
+            <div class="dashboard-card">
+                <h3>On Leave</h3>
+                <p class="stat-number" id="onLeave">0</p>
+            </div>
+            
+            <div class="dashboard-card">
+                <h3>Pending Leave Requests</h3>
+                <p class="stat-number" id="pendingLeaves">0</p>
+            </div>
+        </div>
+
+        <div class="recent-section">
+            <h2>Recent Activities</h2>
+            <div class="activity-list">
+                <div class="activity-item">
+                    <span class="activity-icon">👤</span>
+                    <span>New employee added: Vikram Verma</span>
+                    <span class="activity-time">2 hours ago</span>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">📅</span>
+                    <span>Leave approved for Rajesh Kumar</span>
+                    <span class="activity-time">5 hours ago</span>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">💰</span>
+                    <span>Salary processed for December 2024</span>
+                    <span class="activity-time">1 day ago</span>
+                </div>
+                <div class="activity-item">
+                    <span class="activity-icon">⏰</span>
+                    <span>Attendance marked for all employees</span>
+                    <span class="activity-time">1 day ago</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <h2>Quick Actions</h2>
+            <div class="action-buttons">
+                <button onclick="location.href='employees.html'" class="action-btn">Add Employee</button>
+                <button onclick="location.href='attendance.html'" class="action-btn">Mark Attendance</button>
+                <button onclick="location.href='salary.html'" class="action-btn">Process Salary</button>
+                <button onclick="location.href='leaves.html'" class="action-btn">Manage Leaves</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        // Check if user is logged in
+        checkAuth();
+
+        // Load dashboard stats
+        function loadDashboardStats() {
+            const employees = JSON.parse(localStorage.getItem('employees') || '[]');
+            const attendance = JSON.parse(localStorage.getItem('attendance') || '[]');
+            const leaves = JSON.parse(localStorage.getItem('leaves') || '[]');
+            
+            document.getElementById('totalEmployees').textContent = employees.length;
+            
+            // Count present today (mock data)
+            const presentCount = attendance.filter(a => a.status === 'Present').length;
+            document.getElementById('presentToday').textContent = presentCount;
+            
+            // Count on leave
+            const onLeaveCount = attendance.filter(a => a.status === 'Leave').length;
+            document.getElementById('onLeave').textContent = onLeaveCount;
+            
+            // Count pending leaves
+            const pendingCount = leaves.filter(l => l.status === 'Pending').length;
+            document.getElementById('pendingLeaves').textContent = pendingCount;
+        }
+
+        // Load stats on page load
+        loadDashboardStats();
+    </script>
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Management - Indian Payroll System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">Indian Payroll System</div>
+        <ul class="nav-menu">
+            <li><a href="dashboard.html">Dashboard</a></li>
+            <li><a href="employees.html">Employees</a></li>
+            <li><a href="attendance.html">Attendance</a></li>
+            <li><a href="salary.html">Salary/Payroll</a></li>
+            <li><a href="leaves.html" class="active">Leave Management</a></li>
+            <li><a href="loans.html">Loans & Advances</a></li>
+            <li><a href="reimbursements.html">Reimbursements</a></li>
+            <li><a href="#" onclick="logout()">Logout</a></li>
+        </ul>
+        <div class="user-info">
+            <span id="userDisplay"></span>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Leave Management</h1>
+        
+        <div class="action-bar">
+            <button onclick="showLeaveForm()" class="btn-primary">Apply for Leave</button>
+        </div>
+
+        <!-- Leave Application Form -->
+        <div id="leaveForm" class="form-section" style="display: none;">
+            <h2>Leave Application</h2>
+            <form id="leaveApplicationForm">
+                <input type="hidden" id="leaveId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="empSelect">Employee</label>
+                        <select id="empSelect" required>
+                            <option value="">Select Employee</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="leaveType">Leave Type</label>
+                        <select id="leaveType" required>
+                            <option value="Casual Leave">Casual Leave (CL)</option>
+                            <option value="Sick Leave">Sick Leave (SL)</option>
+                            <option value="Earned Leave">Earned Leave (EL)</option>
+                            <option value="Maternity Leave">Maternity Leave</option>
+                            <option value="Paternity Leave">Paternity Leave</option>
+                            <option value="LWP">Leave Without Pay</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="fromDate">From Date</label>
+                        <input type="date" id="fromDate" required onchange="calculateDays()">
+                    </div>
+                    <div class="form-group">
+                        <label for="toDate">To Date</label>
+                        <input type="date" id="toDate" required onchange="calculateDays()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="days">Number of Days</label>
+                        <input type="number" id="days" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="reason">Reason</label>
+                        <textarea id="reason" rows="2" required></textarea>
+                    </div>
+                </div>
+                <div class="form-buttons">
+                    <button type="submit" class="btn-primary">Submit Application</button>
+                    <button type="button" onclick="hideLeaveForm()" class="btn-secondary">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Leave Requests (for approval) -->
+        <div class="table-section">
+            <h2>Pending Leave Requests</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="pendingLeaves">
+                    <!-- Pending leaves will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Leave History -->
+        <div class="table-section">
+            <h2>Leave History</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Leave Type</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="leaveHistory">
+                    <!-- Leave history will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Leave Balance -->
+        <div class="table-section">
+            <h2>Employee Leave Balance</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Employee</th>
+                        <th>Casual Leave</th>
+                        <th>Sick Leave</th>
+                        <th>Earned Leave</th>
+                        <th>Total Available</th>
+                    </tr>
+                </thead>
+                <tbody id="leaveBalance">
+                    <!-- Leave balance will be loaded here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="common.js"></script>
+    <script>
+        // Check if user is logged in
+        checkAuth();
+
+        let employees = JSON.parse(localStorage.getItem('employees') || '[]');
+        let leaves = JSON.parse(localStorage.getItem('leaves') || '[]');
+        
+        // Initialize leave balances if not exists
+        if (!localStorage.getItem('leaveBalances')) {
+            const balances = {};
+            employees.forEach(emp => {
+                balances[emp.id] = {
+                    casual: 12,
+                    sick: 7,
+                    earned: 15
+                };
+            });
+            localStorage.setItem('leaveBalances', JSON.stringify(balances));
+        }
+        let leaveBalances = JSON.parse(localStorage.getItem('leaveBalances') || '{}');
+
+        function loadEmployeeSelect() {
+            const select = document.getElementById('empSelect');
+            select.innerHTML = '<option value="">Select Employee</option>';
+            employees.forEach(emp => {
+                select.innerHTML += `<option value="${emp.id}">${emp.name} (${emp.empCode})</option>`;
+            });
+        }
+
+        function showLeaveForm() {
+            document.getElementById('leaveForm').style.display = 'block';
+            document.getElementById('leaveApplicationForm').reset();
+            loadEmployeeSelect();
+        }
+
+        function hideLeaveForm() {
+            document.getElementById('leaveForm').style.display = 'none';
+        }
+
+        function calculateDays() {
+            const fromDate = document.getElementById('fromDate').value;
+            const toDate = document.getElementById('toDate').value;
+            
+            if (fromDate && toDate) {
+                const from = new Date(fromDate);
+                const to = new Date(toDate);
+                const diffTime = Math.abs(to - from);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                document.getElementById('days').value = diffDays;
+            }
+        }
+
+        function loadPendingLeaves() {
+            const tbody = document.getElementById('pendingLeaves');
+            tbody.innerHTML = '';
+            
+            const pendingLeaves = leaves.filter(l => l.status === 'Pending');
+            
+            pendingLeaves.forEach(leave => {
+                const emp = employees.find(e => e.id === leave.empId);
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${emp ? emp.name : 'Unknown'}</td>
+                    <td>${leave.leaveType}</td>
+                    <td>${leave.fromDate}</td>
+                    <td>${leave.toDate}</td>
+                    <td>${leave.days}</td>
+                    <td>${leave.reason}</td>
+                    <td><span class="status-badge status-pending">Pending</span></td>
+                    <td>
+                        <button onclick="approveLeave(${leave.id})" class="btn-small btn-success">Approve</button>
+                        <button onclick="rejectLeave(${leave.id})" class="btn-small btn-danger">Reject</button>
+                    </td>
+                `;
+            });
+        }
+
+        function loadLeaveHistory() {
+            const tbody = document.getElementById('leaveHistory');
+            tbody.innerHTML = '';
+            
+            leaves.forEach(leave => {
+                const emp = employees.find(e => e.id === leave.empId);
+                const row = tbody.insertRow();
+                const statusClass = leave.status.toLowerCase().replace(' ', '-');
+                row.innerHTML = `
+                    <td>${emp ? emp.name : 'Unknown'}</td>
+                    <td>${leave.leaveType}</td>
+                    <td>${leave.fromDate}</td>
+                    <td>${leave.toDate}</td>
+                    <td>${leave.days}</td>
+                    <td>${leave.reason}</td>
+                    <td><span class="status-badge status-${statusClass}">${leave.status}</span></td>
+                `;
+            });
+        }
+
+        function loadLeaveBalances() {
+            const tbody = document.getElementById('leaveBalance');
+            tbody.innerHTML = '';
+            
+            employees.forEach(emp => {
+                const balance = leaveBalances[emp.id] || {casual: 12, sick: 7, earned: 15};
+                const total = balance.casual + balance.sick + balance.earned;
+                
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${emp.name}</td>
+                    <td>${balance.casual}</td>
+                    <td>${balance.sick}</td>
+                    <td>${balance.earned}</td>
+                    <td><strong>${total}</strong></td>
+                `;
+            });
+        }
+
+        function approveLeave(leaveId) {
+            const leaveIndex = leaves.findIndex(l => l.id === leaveId);
+            if (leaveIndex !== -1) {
+                leaves[leaveIndex].status = 'Approved';
+                localStorage.setItem('leaves', JSON.stringify(leaves));
+                loadPendingLeaves();
+                loadLeaveHistory();
+                alert('Leave approved successfully!');
+            }
+        }
+
+        function rejectLeave(leaveId) {
+            const leaveIndex = leaves.findIndex(l => l.id === leaveId);
+            if (leaveIndex !== -1) {
+                leaves[leaveIndex].status = 'Rejected';
+                localStorage.setItem('leaves', JSON.stringify(leaves));
+                loadPendingLeaves();
+                loadLeaveHistory();
+                alert('Leave rejected!');
+            }
+        }
+
+        document.getElementById('leaveApplicationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const leaveData = {
+                id: Date.now(),
+                empId: parseInt(document.getElementById('empSelect').value),
+                leaveType: document.getElementById('leaveType').value,
+                fromDate: document.getElementById('fromDate').value,
+                toDate: document.getElementById('toDate').value,
+                days: parseInt(document.getElementById('days').value),
+                reason: document.getElementById('reason').value,
+                status: 'Pending',
+                appliedDate: new Date().toISOString()
+            };
+            
+            leaves.push(leaveData);
+            localStorage.setItem('leaves', JSON.stringify(leaves));
+            
+            hideLeaveForm();
+            loadPendingLeaves();
+            loadLeaveHistory();
+            alert('Leave application submitted successfully!');
+        });
+
+        // Load data on page load
+        loadPendingLeaves();
+        loadLeaveHistory();
+        loadLeaveBalances();
+    </script>
+</body>
+</html>
